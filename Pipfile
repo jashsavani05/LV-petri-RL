@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+snakes = "*"
+snakes_spn = {ref = "ed73de60ab5be3242366960197f7f5c948a2afcc", git = "git+https://github.com/xenomorph1096/snakes_spn.git"}
+scipy = "*"
+numpy = "*"
+matplotlib = "*"
+pylint = "*"
+jedi = "0.19.2"
+autopep8 = "*"
+yapf = "*"
+black = "*"
+flake8 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
