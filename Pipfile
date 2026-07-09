@@ -15,7 +15,8 @@ autopep8 = "*"
 yapf = "*"
 black = "*"
 flake8 = "*"
-
+pysindy = "*"
+scikit-learn = "*"
 [dev-packages]
 
 [requires]
