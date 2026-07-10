@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4b74f018674d257af27c18919f7f203133e758ce770a4d4cf184f0738adc5574"
+            "sha256": "c38d1eac79603275003fadbceefc83886eb64b2f6a0ccc3cec8e0e265febda27"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -713,13 +713,9 @@
             "version": "==3.3.2"
         },
         "pysindy": {
-            "hashes": [
-                "sha256:369659db632e72e670b64cfd79fd3c0b9efc8e3a36f0c35f4f11b844e863bb08",
-                "sha256:b75c1bc760b728eac52a42ee3e3dd97454175e49df29124740ea7dee43a8be39"
-            ],
-            "index": "pypi",
+            "git": "git+https://github.com/dynamicslab/pysindy.git",
             "markers": "python_version >= '3.10'",
-            "version": "==2.1.0"
+            "ref": "c4421fcec275c8f4cc5c1e93bebb961b212067ae"
         },
         "python-dateutil": {
             "hashes": [

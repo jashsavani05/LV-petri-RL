@@ -9,6 +9,7 @@ import snakes.plugins
 import snakes_spn.plugin as spn_plugin
 from snakes.typing import tAll
 from snakes.nets import *
+import numpy as np
 
 snakes.plugins.load([spn_plugin, "gv"], "snakes.nets", "snk")
 
@@ -28,13 +29,6 @@ from snk import (
 from spn_tools.run_simulation import run_simulation
 
 
-def grv(mu, sigma):
-    def func() -> float:
-        return max(0.000000001, random.gauss(mu=mu, sigma=sigma))
-
-    return func
-
-
 def setup_lotka_volterra_simulation():
     """TODO describe function
 
@@ -42,12 +36,7 @@ def setup_lotka_volterra_simulation():
 
     """
     lv_cpn = PetriNet("Lotka-Volterra CPN Model")
-    alpha, beta, gamma, K = (
-        grv(0.5, 0.01),
-        grv(0.3, 0.1),
-        grv(0.002, 0.0002),
-        350.0,
-    )
+    alpha, beta, gamma, K = 0.5, 0.3, 0.002, 350
     lv_cpn.globals["alpha"] = alpha
     lv_cpn.globals["beta"] = beta
     lv_cpn.globals["gamma"] = gamma
@@ -58,7 +47,7 @@ def setup_lotka_volterra_simulation():
     lv_cpn.add_place(p_predator)
     lv_cpn.add_place(p_prey)
 
-    exp_predator_huntrate = Expression("gamma() * x * y")
+    exp_predator_huntrate = Expression("gamma * x * y")
     exp_predator_huntrate.globals["gamma"] = gamma
     t_predator_born = Transition(
         name="Predator hunts prey", rate_function=exp_predator_huntrate
@@ -70,7 +59,7 @@ def setup_lotka_volterra_simulation():
     lv_cpn.add_output(p_predator.name, t_predator_born.name, Expression("y + 1"))
     lv_cpn.add_output(p_prey.name, t_predator_born.name, Expression("x - 1"))
 
-    exp_predator_deathrate = Expression("beta() * y")
+    exp_predator_deathrate = Expression("beta * y")
     exp_predator_deathrate.globals["beta"] = beta
     t_predator_dies = Transition("Predator dies", rate_function=exp_predator_deathrate)
     lv_cpn.add_transition(t_predator_dies)
@@ -78,7 +67,7 @@ def setup_lotka_volterra_simulation():
     lv_cpn.add_input(p_predator.name, t_predator_dies.name, Variable("y"))
     lv_cpn.add_output(p_predator.name, t_predator_dies.name, Expression("y - 1"))
 
-    exp_prey_birthrate = Expression("alpha() * x * (1 - x/K)")
+    exp_prey_birthrate = Expression("alpha * x")
 
     exp_prey_birthrate.globals["alpha"] = alpha
     exp_prey_birthrate.globals["K"] = K
@@ -91,10 +80,14 @@ def setup_lotka_volterra_simulation():
     return lv_cpn
 
 
-lv_cpn = setup_lotka_volterra_simulation()
-lv_cpn.draw("cpn.png")
-sim = run_simulation(lv_cpn, max_steps=20000)
+def run_sim(lv_cpn, max_steps=20000, seed=0, plot=False):
+    lv_cpn.draw("cpn.png")
+    sim = run_simulation(
+        lv_cpn, max_steps=max_steps, rng=np.random.default_rng(seed).random
+    )
 
-plt.plot(sim["time"], sim["Prey"])
-plt.plot(sim["time"], sim["Predator"])
-plt.show()
+    if plot:
+        plt.plot(sim["time"], sim["Predator"])
+        plt.plot(sim["time"], sim["Prey"])
+        plt.show()
+    return sim

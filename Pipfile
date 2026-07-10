@@ -15,7 +15,7 @@ autopep8 = "*"
 yapf = "*"
 black = "*"
 flake8 = "*"
-pysindy = "*"
+pysindy = {git = "git+https://github.com/dynamicslab/pysindy.git"}
 scikit-learn = "*"
 [dev-packages]
 
