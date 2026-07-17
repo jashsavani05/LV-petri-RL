@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c38d1eac79603275003fadbceefc83886eb64b2f6a0ccc3cec8e0e265febda27"
+            "sha256": "9f4ae1d7fcccc67341b55c7651987b10667d61329be878fd5e581cd8a4150d27"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -74,6 +74,14 @@
             ],
             "markers": "python_version >= '3.10'",
             "version": "==8.4.2"
+        },
+        "cloudpickle": {
+            "hashes": [
+                "sha256:7fda9eb655c9c230dab534f1983763de5835249750e85fbcef43aaa30a9a2414",
+                "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==3.1.2"
         },
         "contourpy": {
             "hashes": [
@@ -695,6 +703,15 @@
             "markers": "python_version >= '3.9'",
             "version": "==3.4.0"
         },
+        "pygad": {
+            "hashes": [
+                "sha256:9858226f1b1482ab845b3129152fe9ca4457a7bcae5804717647beacd00b734c",
+                "sha256:e881dbdfd9110a20ba26b4a83de94207993ea253f1b41013719a4394e74a9084"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3'",
+            "version": "==3.7.0"
+        },
         "pylint": {
             "hashes": [
                 "sha256:52f19191bee08bf103f9705ad1a0ece4aa5a0a4ef2bdcbd969375a1e6f6579d5",
@@ -913,6 +930,15 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==0.15.0"
+        },
+        "tqdm": {
+            "hashes": [
+                "sha256:19829c9673638f2a0b8617da4cdcb927e831cd88bcfcb6e78d42a4d1af131520",
+                "sha256:5168118b2368f48c561afda8020fd79195b1bdb0bdf8086b88442c267a315dc2"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==4.68.4"
         },
         "typing-extensions": {
             "hashes": [

@@ -1,49 +1,95 @@
 #!/usr/bin/env python3
 
-# %% [markdown]
-# # Generating data and fitting pysindy models.
-# [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dynamicslab/pysindy/v2.0?filepath=examples/tutorial_1.ipynb)
-#
-# This notebook discusses the relationship between SINDy and PySINDy,
-# using a brief example showing how different objects in the SINDy method are represented in PySINDy.
-# It may help to be familiar with the basics of SINDy, as presented in the original paper
-# or [summarized here](https://pysindy.readthedocs.org/en/latest/summary.html).
-#
-# Suppose we have measurements of the position of a particle obeying the following dynamical system at different points in time:
-#
-# $$
-#     \frac{d}{dt} \begin{bmatrix} x \\ y \end{bmatrix}
-#     = \begin{bmatrix} -2x \\ y \end{bmatrix}
-#     = \begin{bmatrix} -2 & 0 \\ 0 & 1 \end{bmatrix}
-#     \begin{bmatrix} x \\ y \end{bmatrix}
-# $$
-#
-# Note that this system of differential equations decouples into two differential equations whose solutions are simply $x(t) = x_0e^{-2t}$ and $y(t) = y_0e^t$, where $x_0 = x(0)$ and $y_0=y(0)$ are the initial conditions.
-#
-# Using the initial conditions $x_0 = 3$ and $y_0 = \tfrac{1}{2}$, we construct the data matrix $X$.
-# %%
 import numpy as np
-from scipy.stats import Normal
-import pysindy as ps
 from numbers import Number
-import matplotlib.pyplot as plt
-import optimizers
-from sklearn import linear_model
-from lv_sim import setup_lotka_volterra_simulation, run_sim
+from scipy.stats import Normal
+from matplotlib import pyplot as plt
+from sklearn.linear_model import ridge_regression, LinearRegression
+from lv_sim import LV_SIM
+from scipy.interpolate import interp1d
+import pygad
+import pysindy as ps
+from itertools import islice
+from tqdm import tqdm
 from scipy.signal import savgol_filter
-from importlib import reload
+
+
+class ExpressionFunction:
+    def __init__(
+        self,
+        num_args,
+        library_functions=ps.PolynomialLibrary(degree=2),
+        coefficients=None,
+    ):
+        self.num_args = num_args
+        self.library_functions = library_functions
+        self.coefficients = coefficients
+        self.f = self.library_functions.fit(np.random.rand(1, self.num_args))
+        self.num_coefficients = len(self.f.get_feature_names())
+        if self.coefficients is None:
+            self.coefficients = np.ones((self.num_coefficients, 1))
+
+    def func(self, *args):
+        try:
+            self.f = self.library_functions.fit(np.random.rand(1, self.num_args))
+            theta = self.f.transform(np.array([args]))
+            return (theta @ self.coefficients)[0][0]
+        except Exception as E:
+            print(E)
+            breakpoint()
+
+
+class STLSQ:
+    def __init__(
+        self,
+        spn_model=LV_SIM,
+        spn_model_expressions={
+            "hunt_rate": 2,
+            "predator_death_rate": 1,
+            "prey_birth_rate": 1,
+        },
+        library_functions=None,
+        threshold=0.1,
+        initial_guess=None,
+        sparse_ind=None,
+        interpolation="cubic",
+    ):
+        self.spn_model = spn_model
+        self.spn_model_targets = spn_model_expressions
+        self.library_functions = library_functions
+        self.threshold = threshold
+        self.expressions = initial_guess
+        self.interpolation = interpolation
+        if self.library_functions is None:
+            self.library_functions = pysindy.PolynomialLibrary
+        efs = {
+            k: ExpressionFunction(num_args=v) for k, v in self.spn_model_targets.items()
+        }
+
+        self.num_coefficients = {k: ef.num_coefficients for k, ef in efs.items()}
+        self.total_coefficients = sum(v for v in self.num_coefficients.values())
 
 
 def run():
+    x0 = (50, 150)
 
-    lv_cpn = setup_lotka_volterra_simulation()
+    lv_cpn = LV_SIM(x0=x0)
 
-    sim = run_sim(lv_cpn, max_steps=20000, seed=0, plot=True)
+    sim, _, _ = lv_cpn.run_sim(max_steps=20000, seed=0, plot=True)
 
     indices = list(range(len(sim["time"])))[0::10]
 
     X = np.stack(
         (np.take(sim["Predator"], indices), np.take(sim["Prey"], indices)), axis=-1
+    )
+
+    feature_library = ps.feature_library.CustomLibrary(
+        library_functions=[
+            lambda x: x,
+            lambda x: x * x,
+            lambda y: y * y,
+            lambda x, y: x * y,
+        ]
     )
 
     # X = np.stack(
@@ -59,9 +105,7 @@ def run():
     print(f"time is shape: {t.shape}")
 
     differentiation_method = ps.FiniteDifference(order=2)
-    feature_library = ps.feature_library.CustomLibrary(
-        library_functions=[lambda x: x, lambda x, y: x * y]
-    )
+
     # optimizer = linear_model.Lasso(alpha=2, max_iter=10000, fit_intercept=False)
     optimizer = ps.optimizers.STLSQ(threshold=0.0001)
     model = ps.SINDy(
@@ -83,4 +127,16 @@ def run():
     return model
 
 
-model = run()
+# model = run()
+
+ls = ps.feature_library.CustomLibrary(
+    library_functions=[
+        lambda x: x,
+        lambda x: x * x,
+        lambda x, y: x * y,
+    ]
+)
+
+ls = ls.fit(np.array([1, 2]))
+print(ls.get_feature_names())
+ls.transform(np.array([[1, 2]])).sum()

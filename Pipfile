@@ -16,7 +16,9 @@ yapf = "*"
 black = "*"
 flake8 = "*"
 pysindy = {git = "git+https://github.com/dynamicslab/pysindy.git"}
+pygad = "*"
 scikit-learn = "*"
+tqdm = "*"
 [dev-packages]
 
 [requires]
