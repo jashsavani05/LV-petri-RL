@@ -55,27 +55,31 @@ class STLSQ:
         )
 
     def loss_and_grad(self, Ys, ts, W):
-        Ps = [self.P_.transform(y) for y in Ys]
+        Ps = [self.P_.transform(np.array([y])).T for y in Ys]
         Y_diff_preds = [self.S @ W @ P for P in Ps]
         losses = []
         loss_grads = []
         N = len(Ys)
         for i in range(1, len(Ys)):
             Y_i, Y_im1 = (Ys[i], Ys[i - 1])
+            P_i, P_im1 = (Ps[i], Ps[i - 1])
             dY_i_pred, dY_im1_pred = (Y_diff_preds[i], Y_diff_preds[i - 1])
             t_i, t_im1 = (ts[i], ts[i - 1])
-            P_diff = (dY_i_pred - dY_im1_pred) / 2
-            C = (Y_i - Y_im1) / (t_i - t_im1)
-            K = P_diff - C
-            loss = (sum(K**2)) / 2
-            grad_loss = self.S.T @ K @ P_diff.T
-            losses.append(loss)
-            loss_grads.append(grad_loss)
+            mean_diff_pred = (dY_i_pred - dY_im1_pred) / 2
+            C = np.array([(Y_i - Y_im1) / (t_i - t_im1)]).T
+            K = mean_diff_pred - C
+            P_diff = P_i - P_im1
+            losses.append(((sum(K**2)) / 2)[0])
+            loss_grads.append(self.S.T @ K @ P_diff.T)
+            if not np.isfinite(losses[-1]):
+                breakpoint()
+            if not np.isfinite(loss_grads[-1]).all():
+                breakpoint()
 
-        loss = sum(losses) / N
-        grad_loss = sum(loss_grads) / N
+        loss_ = sum(losses) / N + (W**2).sum()
+        grad_loss_ = sum(loss_grads) / N + W
 
-        return loss, grad_loss
+        return loss_, grad_loss_
 
     # def on_gen(self, ga_instance):
     #     # ga_instance.plot_fitness()
@@ -123,17 +127,19 @@ class STLSQ:
     #     ga_instance.run()
     #     return ga_instance
 
-    def fit(self, Ys, ts, max_iterations=100, plot=False):
+    def fit(self, Ys, ts, max_iterations=1000, plot=False):
         W = self.W
         losses = []
         for it in tqdm(range(max_iterations)):
             loss, grad = self.loss_and_grad(Ys, ts, W)
             losses.append(loss)
-            if plot and (it % 10 == 0):
-                plt.plot(list(range(it + 1)), losses)
+            if plot and (it % 1 == 0):
+                its = np.arange(0, it + 1)
+                plt.plot(its, losses),
                 plt.show()
-            losses.append(loss)
             W = W - self.gradient_descent_step * grad
+            if np.isnan(W).any():
+                breakpoint()
         self.W = W
 
         return self
